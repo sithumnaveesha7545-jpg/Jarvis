@@ -413,9 +413,9 @@ ${memoryText}
 // ========================================
 // START SERVER
 // ========================================
-
+const PORT = process.env.PORT || 3000;
 app.listen(
-    3000,
+    PORT,
     function() {
 
         console.log("");
