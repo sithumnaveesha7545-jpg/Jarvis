@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="si">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>My AI Assistant</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+:root {
+    --bg: #101010;
+    --container: #181818;
+    --header: #222;
+    --message: #242424;
+    --user: #333;
+    --text: white;
+    --input: white;
+    --inputText: black;
+}
+
+body.light {
+    --bg: #eeeeee;
+    --container: white;
+    --header: #dddddd;
+    --message: #eeeeee;
+    --user: #d5d5d5;
+    --text: #111;
+    --input: white;
+    --inputText: #111;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    transition: 0.3s;
+}
+
+.chat-container {
+    width: 95%;
+    max-width: 700px;
+    height: 90vh;
+
+    background: var(--container);
+
+    border-radius: 20px;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+
+/* HEADER */
+
+.header {
+    background: var(--header);
+
+    padding: 15px 20px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title {
+    font-size: 25px;
+    font-weight: bold;
+}
+
+.status {
+    font-size: 13px;
+    color: #20c20e;
+    margin-top: 4px;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.small-btn {
+    width: 42px;
+    height: 42px;
+
+    font-size: 18px;
+
+    background: var(--message);
+    color: var(--text);
+
+    border-radius: 10px;
+}
+
+
+/* CHAT */
+
+#chat {
+    flex: 1;
+
+    padding: 20px;
+
+    overflow-y: auto;
+}
+
+.message {
+    max-width: 80%;
+
+    padding: 12px 16px;
+
+    margin-bottom: 12px;
+
+    border-radius: 15px;
+
+    line-height: 1.5;
+
+    white-space: pre-wrap;
+
+    word-wrap: break-word;
+}
+
+.user {
+    background: var(--user);
+
+    margin-left: auto;
+}
+
+.ai {
+    background: var(--message);
+
+    margin-right: auto;
+}
+
+.typing {
+    color: #999;
+    font-style: italic;
+}
+
+
+/* INPUT */
+
+.input-area {
+    display: flex;
+
+    gap: 8px;
+
+    padding: 15px;
+
+    background: var(--header);
+}
+
+#messageInput {
+    flex: 1;
+
+    padding: 14px;
+
+    border: none;
+
+    outline: none;
+
+    border-radius: 25px;
+
+    font-size: 16px;
+
+    background: var(--input);
+
+    color: var(--inputText);
+}
+
+button {
+    border: none;
+
+    cursor: pointer;
+
+    background: white;
+
+    color: black;
+
+    font-size: 20px;
+
+    width: 50px;
+    height: 50px;
+
+    border-radius: 50%;
+
+    transition: 0.15s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+#sendBtn {
+    width: 70px;
+
+    border-radius: 25px;
+}
+
+
+/* SETTINGS */
+
+.settings {
+    position: fixed;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    width: 90%;
+    max-width: 400px;
+
+    background: var(--container);
+
+    color: var(--text);
+
+    padding: 25px;
+
+    border-radius: 20px;
+
+    box-shadow: 0 15px 50px rgba(0,0,0,0.5);
+
+    display: none;
+
+    z-index: 1000;
+}
+
+.settings.show {
+    display: block;
+}
+
+.settings h2 {
+    margin-bottom: 20px;
+}
+
+.setting-item {
+    margin-bottom: 20px;
+}
+
+.setting-item label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    font-weight: bold;
+}
+
+.setting-item input {
+    width: 100%;
+
+    padding: 12px;
+
+    border: none;
+
+    outline: none;
+
+    border-radius: 10px;
+
+    font-size: 16px;
+}
+
+.setting-btn {
+    width: 100%;
+
+    height: 45px;
+
+    border-radius: 10px;
+
+    font-size: 16px;
+
+    margin-top: 8px;
+}
+
+.close-btn {
+    background: #333;
+    color: white;
+}
+
+.overlay {
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0,0,0,0.5);
+
+    display: none;
+
+    z-index: 999;
+}
+
+.overlay.show {
+    display: block;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="chat-container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <div>
+
+            <div
+                class="title"
+                id="aiTitle">
+
+                🤖 My AI
+
+            </div>
+
+            <div class="status">
+
+                ● Online
+
+            </div>
+
+        </div>
+
+
+        <div class="header-buttons">
+
+
+            <!-- THEME -->
+
+            <button
+                class="small-btn"
+                id="themeBtn"
+                type="button">
+
+                🌙
+
+            </button>
+
+
+            <!-- VOICE -->
+
+            <button
+                class="small-btn"
+                id="voiceBtn"
+                type="button">
+
+                🔊
+
+            </button>
+
+
+            <!-- SETTINGS -->
+
+            <button
+                class="small-btn"
+                id="settingsBtn"
+                type="button">
+
+                ⚙️
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- CHAT -->
+
+    <div id="chat"></div>
+
+
+    <!-- INPUT -->
+
+    <div class="input-area">
+
+
+        <!-- MICROPHONE -->
+
+        <button
+            id="micBtn"
+            type="button">
+
+            🎤
+
+        </button>
+
+
+        <input
+            id="messageInput"
+            type="text"
+            placeholder="මගෙන් දෙයක් අහන්න..."
+            autocomplete="off"
+        >
+
+
+        <!-- SEND -->
+
+        <button
+            id="sendBtn"
+            type="button">
+
+            ➤
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- OVERLAY -->
+
+<div
+    class="overlay"
+    id="overlay">
+</div>
+
+
+
+<!-- SETTINGS -->
+
+<div
+    class="settings"
+    id="settingsPanel">
+
+
+    <h2>
+
+        ⚙️ Settings
+
+    </h2>
+
+
+    <div class="setting-item">
+
+
+        <label>
+
+            🤖 AI නම
+
+        </label>
+
+
+        <input
+            id="aiNameInput"
+            type="text"
+            placeholder="My AI"
+        >
+
+    </div>
+
+
+    <div class="setting-item">
+
+
+        <label>
+
+            🧹 Chat
+
+        </label>
+
+
+        <button
+            class="setting-btn"
+            id="clearBtn"
+            type="button">
+
+            Clear Chat History
+
+        </button>
+
+    </div>
+
+
+    <button
+        class="setting-btn"
+        id="saveSettingsBtn"
+        type="button">
+
+        💾 Save Settings
+
+    </button>
+
+
+    <button
+        class="setting-btn close-btn"
+        id="closeSettingsBtn"
+        type="button">
+
+        ✕ Close
+
+    </button>
+
+
+</div>
+
+
+
+<script>
+
+
+// ========================================
+// ELEMENTS
+// ========================================
+
+const input =
+    document.getElementById(
+        "messageInput"
+    );
+
+const sendBtn =
+    document.getElementById(
+        "sendBtn"
+    );
+
+const micBtn =
+    document.getElementById(
+        "micBtn"
+    );
+
+const chat =
+    document.getElementById(
+        "chat"
+    );
+
+const themeBtn =
+    document.getElementById(
+        "themeBtn"
+    );
+
+const voiceBtn =
+    document.getElementById(
+        "voiceBtn"
+    );
+
+const settingsBtn =
+    document.getElementById(
+        "settingsBtn"
+    );
+
+const settingsPanel =
+    document.getElementById(
+        "settingsPanel"
+    );
+
+const overlay =
+    document.getElementById(
+        "overlay"
+    );
+
+const closeSettingsBtn =
+    document.getElementById(
+        "closeSettingsBtn"
+    );
+
+const saveSettingsBtn =
+    document.getElementById(
+        "saveSettingsBtn"
+    );
+
+const clearBtn =
+    document.getElementById(
+        "clearBtn"
+    );
+
+const aiNameInput =
+    document.getElementById(
+        "aiNameInput"
+    );
+
+const aiTitle =
+    document.getElementById(
+        "aiTitle"
+    );
+
+
+// ========================================
+// STORAGE
+// ========================================
+
+const HISTORY_KEY =
+    "my_ai_chat_history";
+
+const NAME_KEY =
+    "my_ai_name";
+
+const THEME_KEY =
+    "my_ai_theme";
+
+const VOICE_KEY =
+    "my_ai_voice";
+
+
+// ========================================
+// VOICE STATE
+// ========================================
+
+let voiceEnabled = true;
+
+
+const savedVoice =
+    localStorage.getItem(
+        VOICE_KEY
+    );
+
+
+if (savedVoice === "off") {
+
+    voiceEnabled = false;
+
+}
+
+
+// ========================================
+// AI NAME
+// ========================================
+
+function loadAIName() {
+
+    const savedName =
+        localStorage.getItem(
+            NAME_KEY
+        );
+
+
+    if (savedName) {
+
+        aiTitle.textContent =
+            "🤖 " + savedName;
+
+        aiNameInput.value =
+            savedName;
+
+    } else {
+
+        aiTitle.textContent =
+            "🤖 My AI";
+
+        aiNameInput.value =
+            "My AI";
+
+    }
+
+}
+
+
+// ========================================
+// THEME
+// ========================================
+
+function loadTheme() {
+
+    const theme =
+        localStorage.getItem(
+            THEME_KEY
+        );
+
+
+    if (theme === "light") {
+
+        document.body.classList.add(
+            "light"
+        );
+
+        themeBtn.textContent =
+            "☀️";
+
+    } else {
+
+        document.body.classList.remove(
+            "light"
+        );
+
+        themeBtn.textContent =
+            "🌙";
+
+    }
+
+}
+
+
+themeBtn.addEventListener(
+    "click",
+    function() {
+
+        document.body.classList.toggle(
+            "light"
+        );
+
+
+        if (
+            document.body.classList.contains(
+                "light"
+            )
+        ) {
+
+            localStorage.setItem(
+                THEME_KEY,
+                "light"
+            );
+
+            themeBtn.textContent =
+                "☀️";
+
+        } else {
+
+            localStorage.setItem(
+                THEME_KEY,
+                "dark"
+            );
+
+            themeBtn.textContent =
+                "🌙";
+
+        }
+
+    }
+);
+
+
+// ========================================
+// VOICE BUTTON
+// ========================================
+
+function updateVoiceButton() {
+
+    if (voiceEnabled) {
+
+        voiceBtn.textContent =
+            "🔊";
+
+        voiceBtn.title =
+            "Voice ON";
+
+    } else {
+
+        voiceBtn.textContent =
+            "🔇";
+
+        voiceBtn.title =
+            "Voice OFF";
+
+    }
+
+}
+
+
+voiceBtn.addEventListener(
+    "click",
+    function() {
+
+        voiceEnabled =
+            !voiceEnabled;
+
+
+        if (!voiceEnabled) {
+
+            if (
+                "speechSynthesis"
+                in window
+            ) {
+
+                window.speechSynthesis.cancel();
+
+            }
+
+            localStorage.setItem(
+                VOICE_KEY,
+                "off"
+            );
+
+        } else {
+
+            localStorage.setItem(
+                VOICE_KEY,
+                "on"
+            );
+
+        }
+
+
+        updateVoiceButton();
+
+    }
+);
+
+
+// ========================================
+// SINHALA VOICE OUTPUT
+// ========================================
+
+function speakSinhala(text) {
+
+    if (!voiceEnabled) {
+        return;
+    }
+
+
+    if (
+        !("speechSynthesis" in window)
+    ) {
+
+        console.log(
+            "❌ Browser එක Speech Synthesis support කරන්නේ නැහැ."
+        );
+
+        return;
+
+    }
+
+
+    if (!text) {
+        return;
+    }
+
+
+    window.speechSynthesis.cancel();
+
+
+    let voices =
+        window.speechSynthesis
+            .getVoices();
+
+
+    let sinhalaVoice =
+        voices.find(
+            function(voice) {
+
+                const lang =
+                    (
+                        voice.lang || ""
+                    ).toLowerCase();
+
+
+                return (
+                    lang === "si-lk" ||
+                    lang.startsWith("si")
+                );
+
+            }
+        );
+
+
+    if (!sinhalaVoice) {
+
+        sinhalaVoice =
+            voices.find(
+                function(voice) {
+
+                    const name =
+                        (
+                            voice.name || ""
+                        ).toLowerCase();
+
+
+                    return (
+                        name.includes(
+                            "sinhala"
+                        ) ||
+                        name.includes(
+                            "sinhalese"
+                        )
+                    );
+
+                }
+            );
+
+    }
+
+
+    if (!sinhalaVoice) {
+
+        console.log(
+            "⚠️ Sinhala voice එක browser එකේ නැහැ."
+        );
+
+        return;
+
+    }
+
+
+    console.log(
+        "🇱🇰 Sinhala Voice:",
+        sinhalaVoice.name,
+        sinhalaVoice.lang
+    );
+
+
+    let cleanText =
+        String(text);
+
+
+    cleanText =
+        cleanText.replace(
+            /\*\*/g,
+            ""
+        );
+
+
+    cleanText =
+        cleanText.replace(
+            /[`*_#]/g,
+            ""
+        );
+
+
+    cleanText =
+        cleanText.trim();
+
+
+    const speech =
+        new SpeechSynthesisUtterance(
+            cleanText
+        );
+
+
+    speech.voice =
+        sinhalaVoice;
+
+
+    speech.lang =
+        "si-LK";
+
+
+    speech.rate =
+        0.9;
+
+
+    speech.pitch =
+        1;
+
+
+    speech.volume =
+        1;
+
+
+    speech.onstart =
+        function() {
+
+            voiceBtn.textContent =
+                "🔊";
+
+        };
+
+
+    speech.onend =
+        function() {
+
+            updateVoiceButton();
+
+        };
+
+
+    speech.onerror =
+        function(error) {
+
+            console.log(
+                "❌ Voice error:",
+                error
+            );
+
+            updateVoiceButton();
+
+        };
+
+
+    window.speechSynthesis.speak(
+        speech
+    );
+
+}
+
+
+// ========================================
+// LOAD BROWSER VOICES
+// ========================================
+
+if (
+    "speechSynthesis" in window
+) {
+
+    window.speechSynthesis
+        .addEventListener(
+            "voiceschanged",
+            function() {
+
+                console.log(
+                    "🔊 Browser voices loaded."
+                );
+
+            }
+        );
+
+}
+
+
+updateVoiceButton();
+
+
+// ========================================
+// SETTINGS OPEN
+// ========================================
+
+settingsBtn.addEventListener(
+    "click",
+    function() {
+
+        settingsPanel.classList.add(
+            "show"
+        );
+
+        overlay.classList.add(
+            "show"
+        );
+
+        aiNameInput.focus();
+
+    }
+);
+
+
+// ========================================
+// SETTINGS CLOSE
+// ========================================
+
+function closeSettings() {
+
+    settingsPanel.classList.remove(
+        "show"
+    );
+
+    overlay.classList.remove(
+        "show"
+    );
+
+}
+
+
+closeSettingsBtn.addEventListener(
+    "click",
+    closeSettings
+);
+
+
+overlay.addEventListener(
+    "click",
+    closeSettings
+);
+
+
+// ========================================
+// SAVE SETTINGS
+// ========================================
+
+saveSettingsBtn.addEventListener(
+    "click",
+    function() {
+
+        let name =
+            aiNameInput.value.trim();
+
+
+        if (!name) {
+
+            name =
+                "My AI";
+
+        }
+
+
+        localStorage.setItem(
+            NAME_KEY,
+            name
+        );
+
+
+        aiTitle.textContent =
+            "🤖 " + name;
+
+
+        closeSettings();
+
+
+        addMessage(
+            "⚙️ AI නම \"" +
+            name +
+            "\" ලෙස වෙනස් කළා.",
+            "ai"
+        );
+
+    }
+);
+
+
+// ========================================
+// SAVE HISTORY
+// ========================================
+
+function saveHistory() {
+
+    const messages = [];
+
+
+    const allMessages =
+        chat.querySelectorAll(
+            ".message"
+        );
+
+
+    allMessages.forEach(
+        function(message) {
+
+            if (
+                message.classList.contains(
+                    "typing"
+                )
+            ) {
+
+                return;
+
+            }
+
+
+            messages.push({
+
+                text:
+                    message.textContent,
+
+                type:
+                    message.classList.contains(
+                        "user"
+                    )
+                        ? "user"
+                        : "ai"
+
+            });
+
+        }
+    );
+
+
+    localStorage.setItem(
+        HISTORY_KEY,
+        JSON.stringify(
+            messages
+        )
+    );
+
+}
+
+
+// ========================================
+// LOAD HISTORY
+// ========================================
+
+function loadHistory() {
+
+    const saved =
+        localStorage.getItem(
+            HISTORY_KEY
+        );
+
+
+    if (!saved) {
+
+        showWelcome();
+
+        return;
+
+    }
+
+
+    try {
+
+        const messages =
+            JSON.parse(
+                saved
+            );
+
+
+        if (
+            !Array.isArray(messages) ||
+            messages.length === 0
+        ) {
+
+            showWelcome();
+
+            return;
+
+        }
+
+
+        messages.forEach(
+            function(message) {
+
+                addMessage(
+                    message.text,
+                    message.type,
+                    false
+                );
+
+            }
+        );
+
+
+        scrollToBottom();
+
+
+    } catch (error) {
+
+        console.log(
+            "History error:",
+            error
+        );
+
+        showWelcome();
+
+    }
+
+}
+
+
+// ========================================
+// WELCOME
+// ========================================
+
+function showWelcome() {
+
+    addMessage(
+        "👋 ආයුබෝවන්!\n\nමම ඔයාගේ AI Assistant.\nමගෙන් ඕනෑම ප්‍රශ්නයක් අහන්න. 😊",
+        "ai",
+        true
+    );
+
+}
+
+
+// ========================================
+// ADD MESSAGE
+// ========================================
+
+function addMessage(
+    text,
+    type,
+    save = true
+) {
+
+    const message =
+        document.createElement(
+            "div"
+        );
+
+
+    message.className =
+        "message " + type;
+
+
+    message.textContent =
+        text;
+
+
+    chat.appendChild(
+        message
+    );
+
+
+    scrollToBottom();
+
+
+    if (save) {
+
+        saveHistory();
+
+    }
+
+}
+
+
+// ========================================
+// SCROLL
+// ========================================
+
+function scrollToBottom() {
+
+    chat.scrollTop =
+        chat.scrollHeight;
+
+}
+
+
+// ========================================
+// TYPING
+// ========================================
+
+function showTyping() {
+
+    const typing =
+        document.createElement(
+            "div"
+        );
+
+
+    typing.className =
+        "message ai typing";
+
+
+    typing.textContent =
+        "🤔 Thinking";
+
+
+    chat.appendChild(
+        typing
+    );
+
+
+    scrollToBottom();
+
+
+    let dots = 0;
+
+
+    typing.timer =
+        setInterval(
+            function() {
+
+                dots++;
+
+
+                if (dots > 3) {
+
+                    dots = 0;
+
+                }
+
+
+                typing.textContent =
+                    "🤔 Thinking" +
+                    ".".repeat(
+                        dots
+                    );
+
+            },
+            400
+        );
+
+
+    return typing;
+
+}
+
+
+function removeTyping(
+    typing
+) {
+
+    if (!typing) {
+        return;
+    }
+
+
+    if (typing.timer) {
+
+        clearInterval(
+            typing.timer
+        );
+
+    }
+
+
+    typing.remove();
+
+}
+
+
+// ========================================
+// SEND MESSAGE
+// ========================================
+
+async function sendMessage() {
+
+    const text =
+        input.value.trim();
+
+
+    if (!text) {
+
+        return;
+
+    }
+
+
+    sendBtn.disabled =
+        true;
+
+    input.disabled =
+        true;
+
+
+    addMessage(
+        text,
+        "user"
+    );
+
+
+    input.value =
+        "";
+
+
+    const typing =
+        showTyping();
+
+
+    try {
+
+        console.log(
+            "👤 User:",
+            text
+        );
+
+
+        const response =
+            await fetch(
+                "/chat",
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            message:
+                                text
+
+                        })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        removeTyping(
+            typing
+        );
+
+
+        const reply =
+            data.reply ||
+            "AI reply එකක් නැහැ.";
+
+
+        addMessage(
+            reply,
+            "ai"
+        );
+
+
+        // ========================================
+        // 🔊 SPEAK AI REPLY
+        // ========================================
+
+        speakSinhala(
+            reply
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "❌ Chat Error:",
+            error
+        );
+
+
+        removeTyping(
+            typing
+        );
+
+
+        addMessage(
+            "❌ Server එකට connect වෙන්න බැරි වුණා.",
+            "ai"
+        );
+
+    }
+
+
+    sendBtn.disabled =
+        false;
+
+    input.disabled =
+        false;
+
+    input.focus();
+
+}
+
+
+// ========================================
+// SEND BUTTON
+// ========================================
+
+sendBtn.addEventListener(
+    "click",
+    sendMessage
+);
+
+
+// ========================================
+// ENTER
+// ========================================
+
+input.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            sendMessage();
+
+        }
+
+    }
+);
+
+
+// ========================================
+// CLEAR CHAT
+// ========================================
+
+clearBtn.addEventListener(
+    "click",
+    function() {
+
+        const ok =
+            confirm(
+                "Chat history එක සම්පූර්ණයෙන්ම මකන්නද?"
+            );
+
+
+        if (!ok) {
+            return;
+        }
+
+
+        localStorage.removeItem(
+            HISTORY_KEY
+        );
+
+
+        chat.innerHTML =
+            "";
+
+
+        showWelcome();
+
+    }
+);
+
+
+// ========================================
+// VOICE INPUT
+// ========================================
+
+const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+
+if (SpeechRecognition) {
+
+
+    const recognition =
+        new SpeechRecognition();
+
+
+    recognition.lang =
+        "si-LK";
+
+
+    recognition.continuous =
+        false;
+
+
+    recognition.interimResults =
+        false;
+
+
+    micBtn.addEventListener(
+        "click",
+        function() {
+
+            try {
+
+                recognition.start();
+
+                micBtn.textContent =
+                    "🔴";
+
+            } catch (error) {
+
+                console.log(
+                    "Voice input error:",
+                    error
+                );
+
+            }
+
+        }
+    );
+
+
+    recognition.onresult =
+        function(event) {
+
+            input.value =
+                event.results[0][0]
+                    .transcript;
+
+
+            micBtn.textContent =
+                "🎤";
+
+
+            input.focus();
+
+        };
+
+
+    recognition.onerror =
+        function(error) {
+
+            console.log(
+                "Speech recognition error:",
+                error
+            );
+
+
+            micBtn.textContent =
+                "🎤";
+
+        };
+
+
+    recognition.onend =
+        function() {
+
+            micBtn.textContent =
+                "🎤";
+
+        };
+
+
+} else {
+
+    micBtn.addEventListener(
+        "click",
+        function() {
+
+            alert(
+                "ඔයාගේ browser එක Voice Recognition support කරන්නේ නැහැ."
+            );
+
+        }
+    );
+
+}
+
+
+// ========================================
+// START
+// ========================================
+
+loadAIName();
+
+loadTheme();
+
+loadHistory();
+
+input.focus();
+
+</script>
+
+</body>
+
+</html>
